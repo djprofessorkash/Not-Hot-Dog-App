@@ -6,7 +6,7 @@ INTENT: The objective of this file is to produce a basic functional data scraper
 """
 
 print("Importing libraries...")
-import itertools, os, urllib, cv2
+import itertools, os, urllib, urllib.request, cv2
 # import numpy as np
 from multiprocessing.dummy import Pool as ThreadPool
 print("Libraries successfully imported.")
@@ -36,6 +36,7 @@ class IngestionEngine(object):
         for link, path in zip(links, paths):
             if not os.path.exists(path):
                 os.makedirs(path)
+            print(f"Downloading {link}...")
             self.image_urls = str(urllib.request.urlopen(link).read())
 
             pool = ThreadPool(processes=32)
