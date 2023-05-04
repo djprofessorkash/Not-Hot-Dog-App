@@ -32,8 +32,19 @@ class IngestionEngine(object):
             print("Failed to download image.")
             return False
 
-    def load_all_images(paths, links):
-        pass
+    def load_all_images(self, paths, links):
+        for link, path in zip(links, paths):
+            if not os.path.exists(path):
+                os.makedirs(path)
+            self.image_urls = str(urllib.request.urlopen(link).read())
+
+            pool = ThreadPool(processes=32)
+            pool.starmap(self.load_single_image, 
+                         zip(itertools.repeat(path), 
+                             self.image_urls.split("\\n"), 
+                             itertools.count(self.DATASIZE)))
+            pool.close()
+            pool.join()
 
 if __name__ == "__main__":
     pipeline = IngestionEngine()
