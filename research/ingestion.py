@@ -47,23 +47,40 @@ class IngestionEngine(object):
             pool.close()
             pool.join()
 
+
+class DistributionEngine(object):
+    """ Standalone class for distributing ingested images into training, testing and validation sets. """
+    def __init__(self):
+        pass
+
+    def unpack_images(self, dirpath="raw"):
+        pass
+
+    def distribute_images(self, dirpath="processed", ):
+        pass
+
+
 if __name__ == "__main__":
-    links, paths = [
-        'http://image-net.org/api/text/imagenet.synset.geturls?wnid=n01318894', \
-        'http://image-net.org/api/text/imagenet.synset.geturls?wnid=n03405725', \
-        'http://image-net.org/api/text/imagenet.synset.geturls?wnid=n07942152', \
-        'http://image-net.org/api/text/imagenet.synset.geturls?wnid=n00021265', \
-        'http://image-net.org/api/text/imagenet.synset.geturls?wnid=n07690019', \
-        'http://image-net.org/api/text/imagenet.synset.geturls?wnid=n07865105', \
-        'http://image-net.org/api/text/imagenet.synset.geturls?wnid=n07697537' 
-    ], [
-        "pets",
-        "furniture",
-        "people",
-        "food",
-        "frankfurter",
-        "chili-dog",
-        "hotdog"
-    ]
-    pipeline = IngestionEngine()
-    pipeline.load_all_images(paths=paths, links=links)
+    # TODO: Refactor engine due to major changes to the ImageNet API.
+    # links, paths = [
+    #     'http://image-net.org/api/text/imagenet.synset.geturls?wnid=n01318894', \
+    #     'http://image-net.org/api/text/imagenet.synset.geturls?wnid=n03405725', \
+    #     'http://image-net.org/api/text/imagenet.synset.geturls?wnid=n07942152', \
+    #     'http://image-net.org/api/text/imagenet.synset.geturls?wnid=n00021265', \
+    #     'http://image-net.org/api/text/imagenet.synset.geturls?wnid=n07690019', \
+    #     'http://image-net.org/api/text/imagenet.synset.geturls?wnid=n07865105', \
+    #     'http://image-net.org/api/text/imagenet.synset.geturls?wnid=n07697537' 
+    # ], [
+    #     "pets",
+    #     "furniture",
+    #     "people",
+    #     "food",
+    #     "frankfurter",
+    #     "chili-dog",
+    #     "hotdog"
+    # ]
+    # pipeline = IngestionEngine()
+    # pipeline.load_all_images(paths=paths, links=links)
+    pipeline = DistributionEngine()
+    pipeline.unpack_images()
+    pipeline.distribute_images()
