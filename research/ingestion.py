@@ -12,8 +12,8 @@ from multiprocessing.dummy import Pool as ThreadPool
 print("Libraries successfully imported.")
 
 
-class IngestionEngine(object):
-    """ Standalone class for ingesting scraped images as data. """
+class LoadingEngine(object):
+    """ Standalone class for loading scraped images as data. """
     def __init__(self):
         self.DATASIZE = 1
 
@@ -61,7 +61,7 @@ class DistributionEngine(object):
 
 
 if __name__ == "__main__":
-    # TODO: Refactor engine due to major changes to the ImageNet API.
+    # TODO: Refactor loading engine due to major changes to the ImageNet API.
     # links, paths = [
     #     'http://image-net.org/api/text/imagenet.synset.geturls?wnid=n01318894', \
     #     'http://image-net.org/api/text/imagenet.synset.geturls?wnid=n03405725', \
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     #     "chili-dog",
     #     "hotdog"
     # ]
-    # pipeline = IngestionEngine()
+    # pipeline = LoadingEngine()
     # pipeline.load_all_images(paths=paths, links=links)
     pipeline = DistributionEngine()
     pipeline.unpack_images()
