@@ -1,6 +1,5 @@
-# Not-Hot-Dog-App
-
-<h1 align="center">Technical Demo for Flatiron School: NOT HOT DOG</h1>
+<h1 align="center">Not Hot Dog</h1>
+<h2 align="center">A demonstration of a full-stack machine learning software application.</h2>
 
 ## Description
 
