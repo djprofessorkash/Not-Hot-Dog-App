@@ -48,18 +48,6 @@ class LoadingEngine(object):
             pool.join()
 
 
-class DistributionEngine(object):
-    """ Standalone class for distributing ingested images into training, testing and validation sets. """
-    def __init__(self):
-        pass
-
-    def unpack_images(self, dirpath="raw"):
-        pass
-
-    def distribute_images(self, dirpath="processed", ):
-        pass
-
-
 if __name__ == "__main__":
     # TODO: Refactor loading engine due to major changes to the ImageNet API.
     # links, paths = [
@@ -81,6 +69,3 @@ if __name__ == "__main__":
     # ]
     # pipeline = LoadingEngine()
     # pipeline.load_all_images(paths=paths, links=links)
-    pipeline = DistributionEngine()
-    pipeline.unpack_images()
-    pipeline.distribute_images()
