@@ -1,0 +1,6 @@
+# Garbage Files
+.DS_Store
+*/.DS_Store
+
+# Datasets
+*/data/
