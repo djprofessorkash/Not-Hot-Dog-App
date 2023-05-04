@@ -3,7 +3,7 @@
 
 ## Description
 
-This is a technical demonstrative project with the goal of showcasing the intersection between software engineering and machine learning technologies via a functional replication of the **"Not Hot Dog"** app from HBO's hit comedy _Silicon Valley_. 
+This is a technical demonstrative project with the goal of showcasing the intersection between software engineering and machine learning technologies via a functional replication of the **"SeeFood"** app from HBO's hit comedy _Silicon Valley_. 
 
 The **Not Hot Dog** app is a basic image recognition application that is designed to take a photo of a food item and theoretically categorize it into one of potentially many classes. However, the punch line is that the application is only able to detect hot dogs and "not hot dogs", or any other food item that is not recognized as a hot dog. 
 
