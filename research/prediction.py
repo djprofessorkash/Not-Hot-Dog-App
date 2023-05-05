@@ -21,7 +21,7 @@ from tensorflow.keras.optimizers import Adam, RMSprop
 from tensorflow.keras.applications.vgg16 import VGG16
 from tensorflow.keras.applications.resnet50 import ResNet50
 from tensorflow.keras.applications.inception_v3 import InceptionV3
-from efficientnet.keras import EfficientNetB0
+from tensorflow.keras.applications.efficientnet import EfficientNetB0
 # print("Libraries loaded.")
 
 
@@ -51,17 +51,65 @@ class DistributionEngine(object):
 			for filename in testing_group:
 				shutil.copy(filename, f"{self.DIRPATH}/{self.SUBDIRTEST}/{label}")
 
-
 class ClassificationEngine(object):
-    def __init__(self, model):
-        self.model = model
-        self.configure()
+	def __init__(self, dirpath="research/data"):
+		self.DIRPATH, self.POSCLASS, self.NEGCLASS = dirpath, "hotdog", "nothotdog"
+		self.SUBDIRTRAIN, self.SUBDIRVAL, self.SUBDIRTEST = "training", "validation", "testing"
+		self.models = {
+			"inception": InceptionV3,
+			"vgg16": VGG16,
+            "resnet50": ResNet50,
+            "efficientnet": EfficientNetB0
+		}
+		self.BATCHSIZE, self.EPOCHS = 32, 50
+	
+	def load(self):
+		self.generator = ImageDataGenerator(rescale=1./255)
+		self.training_generator = self.generator.flow_from_directory(
+			directory=f"{self.DIRPATH}/{self.SUBDIRTRAIN}",
+			target_size=(299, 299),
+			batch_size=self.BATCHSIZE,
+			class_mode=None,
+			shuffle=False)
+		self.validation_generator = self.generator.flow_from_directory(
+            directory=f"{self.DIRPATH}/{self.SUBDIRVAL}",
+            target_size=(299, 299),
+            batch_size=self.BATCHSIZE,
+            class_mode=None,
+			shuffle=False)
+		self.testing_generator = self.generator.flow_from_directory(
+            directory=f"{self.DIRPATH}/{self.SUBDIRTEST}",
+            target_size=(299, 299),
+            batch_size=self.BATCHSIZE,
+            class_mode=None,
+			shuffle=False)
+		self.CLASSES = [outcome for outcome in self.testing_generator.class_indices.keys()]
 
-    def configure(self):
-        pass
+	def configure(self, model):
+		self.classifier = self.models[model](weights="imagenet", include_top=False, input_shape=(299, 299, 3))
 
-    def run(self, model):
-        pass
+		bottleneck_training_features = self.model.predict_generator(self.training_generator, 
+							      									self.training_generator.samples / self.BATCHSIZE, 
+																	verbose=1)
+		np.savez(f"training_features:{model}", features=bottleneck_training_features)
+		bottleneck_testing_features = self.model.predict_generator(self.testing_generator, 
+                                                                   self.testing_generator.samples / self.BATCHSIZE, 
+                                                                   verbose=1)
+		np.savez(f"validation_features:{model}", features=bottleneck_validation_features)
+		bottleneck_validation_features = self.model.predict_generator(self.validation_generator, 
+                                                                   	  self.validation_generator.samples / self.BATCHSIZE, 
+                                                                   	  verbose=1)
+		np.savez(f"testing_features:{model}", features=bottleneck_testing_features)
+
+		self.X_training = np.load("training_features:{model}.npz")["features"]
+		self.X_testing = np.load("testing_features:{model}.npz")["features"]
+		self.X_validation = np.load("validation_features:{model}.npz")["features"]
+		self.y_training = np.array(([0] * (self.training_generator.samples / 2)) + ([1] * (self.training_generator.samples / 2)))
+		self.y_validation = np.array(([0] * (self.validation_generator.samples / 2)) + ([1] * (self.validation_generator.samples / 2)))
+		self.y_testing = np.array(([0] * (self.testing_generator.samples / 2)) + ([1] * (self.testing_generator.samples / 2)))
+	
+	def run(self):
+		checkpointer = ModelCheckpoint(filepath=f"research/models/weights_{model}.hdf5", verbose=1, save_best_only=True)
 
 
 if __name__ == "__main__":
@@ -69,9 +117,9 @@ if __name__ == "__main__":
 	# redistributor = DistributionEngine()
 	# redistributor.distribute()
 
-	# Create pretrained engines for comparative assessments
-    engines = list()
-    for model in [VGG16, ResNet50, InceptionV3, EfficientNetB0]:
-        engine = ClassificationEngine()
-        engine.run(model)
-        engines.append(engine)
+	# Create predictive engine for comparative assessments
+	classifier = ClassificationEngine()
+	classifier.load()
+	for model in ["inception", "vgg16", "resnet50", "efficientnet"]:
+		classifier.configure(model)
+		classifier.run(model)
