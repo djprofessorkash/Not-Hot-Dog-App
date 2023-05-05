@@ -9,14 +9,10 @@ NOTE:   Due to constraints in accessing the ImageNet dataset, this file is desig
 """
 
 # print("Loading libraries...")
-import os
+import os, shutil
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix, classification_report
-from sklearn.metrics import accuracy_score, f1_score
-from sklearn.metrics import roc_curve, auc
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.models import Model, Sequential
@@ -29,11 +25,38 @@ from efficientnet.keras import EfficientNetB0
 # print("Libraries loaded.")
 
 
+class DistributionEngine(object):
+	""" Standalone class for distributing loaded images into training, testing, and validation sets. """
+	def __init__(self, dirpath="../data/", segments=(0.8, 0.1, 0.1)):
+		self.DIRPATH, self.train_val_test_split = dirpath, segments
+		self.POSCLASS, self.NEGCLASS = "hotdog", "nothotdog"
+		self.SUBDIRTRAIN, self.SUBDIRVAL, self.SUBDIRTEST = "training", "validation", "testing"
+
+	def distribute(self):
+		for label in [self.POSCLASS, self.NEGCLASS]:
+			for subdirectory in [self.SUBDIRTRAIN, self.SUBDIRVAL, self.SUBDIRTEST]:
+				os.makedirs(f"{self.DIRPATH}/{subdirectory}/{label}")
+			sources = f"{self.DIRPATH}/{label}"
+			targets = os.listdir(sources); np.random.shuffle(targets)
+			splits = np.split(np.array(targets),
+		     				  [int(len(targets) * self.train_val_test_split[0]),
+	      					   int(len(targets) * (self.train_val_test_split[0] + self.train_val_test_split[1]))])
+			training_group = [f"{sources}/{filepath}" for filepath in splits[0].tolist()]
+			validation_group = [f"{sources}/{filepath}" for filepath in splits[1].tolist()]
+			testing_group = [f"{sources}/{filepath}" for filepath in splits[2].tolist()]
+			for filename in training_group:
+				shutil.copy(filename, f"{self.DIRPATH}/{self.SUBDIRTRAIN}/{label}")
+			for filename in validation_group:
+				shutil.copy(filename, f"{self.DIRPATH}/{self.SUBDIRVAL}/{label}")
+			for filename in testing_group:
+				shutil.copy(filename, f"{self.DIRPATH}/{self.SUBDIRTEST}/{label}")
+
+
 class ClassificationEngine(object):
     def __init__(self, model):
         self.model = model
         self.configure()
-        
+
     def configure(self):
         pass
 

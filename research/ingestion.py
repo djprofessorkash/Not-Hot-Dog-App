@@ -69,3 +69,5 @@ if __name__ == "__main__":
     # ]
     # pipeline = LoadingEngine()
     # pipeline.load_all_images(paths=paths, links=links)
+    pipeline = DistributionEngine()
+    pipeline.distribute()
