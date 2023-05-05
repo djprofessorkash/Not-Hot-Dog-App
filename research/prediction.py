@@ -27,7 +27,7 @@ from efficientnet.keras import EfficientNetB0
 
 class DistributionEngine(object):
 	""" Standalone class for distributing loaded images into training, testing, and validation sets. """
-	def __init__(self, dirpath="../data/", segments=(0.8, 0.1, 0.1)):
+	def __init__(self, dirpath="research/data", segments=(0.8, 0.1, 0.1)):
 		self.DIRPATH, self.train_val_test_split = dirpath, segments
 		self.POSCLASS, self.NEGCLASS = "hotdog", "nothotdog"
 		self.SUBDIRTRAIN, self.SUBDIRVAL, self.SUBDIRTEST = "training", "validation", "testing"
@@ -35,7 +35,7 @@ class DistributionEngine(object):
 	def distribute(self):
 		for label in [self.POSCLASS, self.NEGCLASS]:
 			for subdirectory in [self.SUBDIRTRAIN, self.SUBDIRVAL, self.SUBDIRTEST]:
-				os.makedirs(f"{self.DIRPATH}/{subdirectory}/{label}")
+				os.makedirs(f"{self.DIRPATH}/{subdirectory}/{label}/", exist_ok=True)
 			sources = f"{self.DIRPATH}/{label}"
 			targets = os.listdir(sources); np.random.shuffle(targets)
 			splits = np.split(np.array(targets),
@@ -65,6 +65,11 @@ class ClassificationEngine(object):
 
 
 if __name__ == "__main__":
+	# Redistribute images into training, validation, and testing sets
+	# redistributor = DistributionEngine()
+	# redistributor.distribute()
+
+	# Create pretrained engines for comparative assessments
     engines = list()
     for model in [VGG16, ResNet50, InceptionV3, EfficientNetB0]:
         engine = ClassificationEngine()
