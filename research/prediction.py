@@ -12,11 +12,13 @@ NOTE:   Due to constraints in accessing the ImageNet dataset, this file is desig
 import os, shutil
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix, classification_report
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.models import Model, Sequential
-from tensorflow.keras.layers import Dense, Dropout, Flatten
+from tensorflow.keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
 from tensorflow.keras.optimizers import Adam, RMSprop
 from tensorflow.keras.applications.vgg16 import VGG16
 from tensorflow.keras.applications.resnet50 import ResNet50
@@ -86,30 +88,59 @@ class ClassificationEngine(object):
 		self.CLASSES = [outcome for outcome in self.testing_generator.class_indices.keys()]
 
 	def configure(self, model):
-		self.classifier = self.models[model](weights="imagenet", include_top=False, input_shape=(299, 299, 3))
+		self.pretrained_model = self.models[model](weights="imagenet", include_top=False, input_shape=(299, 299, 3))
 
-		bottleneck_training_features = self.model.predict_generator(self.training_generator, 
-							      									self.training_generator.samples / self.BATCHSIZE, 
-																	verbose=1)
-		np.savez(f"training_features:{model}", features=bottleneck_training_features)
-		bottleneck_testing_features = self.model.predict_generator(self.testing_generator, 
-                                                                   self.testing_generator.samples / self.BATCHSIZE, 
-                                                                   verbose=1)
-		np.savez(f"validation_features:{model}", features=bottleneck_validation_features)
-		bottleneck_validation_features = self.model.predict_generator(self.validation_generator, 
-                                                                   	  self.validation_generator.samples / self.BATCHSIZE, 
-                                                                   	  verbose=1)
-		np.savez(f"testing_features:{model}", features=bottleneck_testing_features)
+		bottleneck_training_features = self.pretrained_model.predict(self.training_generator, 
+							      									 self.training_generator.samples / self.BATCHSIZE, 
+																	 verbose=1)
+		np.savez(f"{self.DIRPATH}/{self.SUBDIRTRAIN}/training_features:{model}", features=bottleneck_training_features)
+		bottleneck_validation_features = self.pretrained_model.predict(self.validation_generator, 
+                                                                   	   self.validation_generator.samples / self.BATCHSIZE, 
+                                                                   	   verbose=1)
+		np.savez(f"{self.DIRPATH}/{self.SUBDIRVAL}/validation_features:{model}", features=bottleneck_validation_features)
+		bottleneck_testing_features = self.pretrained_model.predict(self.testing_generator, 
+                                                                   	self.testing_generator.samples / self.BATCHSIZE, 
+                                                                   	verbose=1)
+		np.savez(f"{self.DIRPATH}/{self.SUBDIRTEST}/testing_features:{model}", features=bottleneck_testing_features)
 
-		self.X_training = np.load("training_features:{model}.npz")["features"]
-		self.X_testing = np.load("testing_features:{model}.npz")["features"]
-		self.X_validation = np.load("validation_features:{model}.npz")["features"]
-		self.y_training = np.array(([0] * (self.training_generator.samples / 2)) + ([1] * (self.training_generator.samples / 2)))
-		self.y_validation = np.array(([0] * (self.validation_generator.samples / 2)) + ([1] * (self.validation_generator.samples / 2)))
-		self.y_testing = np.array(([0] * (self.testing_generator.samples / 2)) + ([1] * (self.testing_generator.samples / 2)))
+		self.X_training = np.load(f"{self.DIRPATH}/{self.SUBDIRTRAIN}/training_features:{model}.npz")["features"]
+		self.X_validation = np.load(f"{self.DIRPATH}/{self.SUBDIRVAL}/validation_features:{model}.npz")["features"]
+		self.X_testing = np.load(f"{self.DIRPATH}/{self.SUBDIRTEST}/testing_features:{model}.npz")["features"]
+		self.y_training = np.array(([0] * int(self.training_generator.samples / 2)) + ([1] * int(self.training_generator.samples / 2)))
+		self.y_validation = np.array(([0] * int(self.validation_generator.samples / 2)) + ([1] * int(self.validation_generator.samples / 2)))
+		self.y_testing = np.array(([0] * int(self.testing_generator.samples / 2)) + ([1] * int(self.testing_generator.samples / 2)))
 	
-	def run(self):
+	def run(self, model):
+		self.classifier = Sequential()
+		self.classifier.add(Conv2D(32, (3, 3), activation="relu", input_shape=self.X_training.shape[1:], padding="same"))
+		self.classifier.add(Conv2D(32, (3, 3), activation="relu", padding="same"))
+		self.classifier.add(MaxPooling2D(pool_size=(3, 3)))
+		self.classifier.add(Dropout(0.25))
+		self.classifier.add(Conv2D(64, (3, 3), activation="relu", padding="same"))
+		self.classifier.add(Conv2D(64, (3, 3), activation="relu", padding="same"))
+		self.classifier.add(MaxPooling2D(pool_size=(2, 2)))
+		self.classifier.add(Dropout(0.5))
+		self.classifier.add(Flatten())
+		self.classifier.add(Dense(512, activation="relu"))
+		self.classifier.add(Dropout(0.6))
+		self.classifier.add(Dense(256, activation="relu"))
+		self.classifier.add(Dropout(0.5))
+		self.classifier.add(Dense(1, activation="sigmoid"))
 		checkpointer = ModelCheckpoint(filepath=f"research/models/weights_{model}.hdf5", verbose=1, save_best_only=True)
+		stopper = EarlyStopping(monitor="val_loss", patience=10, verbose=1, mode="auto")
+		print(self.classifier.summary())
+		self.classifier.compile(loss="binary_crossentropy", optimizer=Adam(lr=0.001), metrics=["binary_accuracy"])
+		self.history = self.classifier.fit(self.X_training, 
+				     					   self.y_training, 
+										   epochs=50, 
+										   batch_size=self.BATCHSIZE,
+										   validation_data=(self.X_validation, self.y_validation), 
+										   callbacks=[checkpointer, stopper],
+										   shuffle=True,
+										   verbose=2)
+		self.classifier.load_weights(f"research/models/weights_{model}.hdf5")
+		self.y_predictions = self.classifier.predict(self.X_testing, batch_size=self.BATCHSIZE, verbose=1)
+		print(self.classifier.evaluate(self.X_testing, self.y_testing, verbose=1, batch_size=self.BATCHSIZE)[1])
 
 
 if __name__ == "__main__":
