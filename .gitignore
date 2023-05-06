@@ -4,3 +4,7 @@
 
 # Datasets
 */data/
+
+# Bottlenecking Features
+*.npz
+/*.npz
