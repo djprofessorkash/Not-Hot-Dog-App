@@ -58,10 +58,10 @@ class ClassificationEngine(object):
 		self.DIRPATH, self.POSCLASS, self.NEGCLASS = dirpath, "hotdog", "nothotdog"
 		self.SUBDIRTRAIN, self.SUBDIRVAL, self.SUBDIRTEST = "training", "validation", "testing"
 		self.models = {
-			"inception": InceptionV3,
-			"vgg16": VGG16,
-            "resnet50": ResNet50,
-            "efficientnet": EfficientNetB0
+			"inception": {"classifier": InceptionV3, "loss": 0, "accuracy": 0},
+			"vgg16": {"classifier": VGG16, "loss": 0, "accuracy": 0},
+            "resnet50": {"classifier": ResNet50, "loss": 0, "accuracy": 0},
+            "efficientnet": {"classifier": EfficientNetB0, "loss": 0, "accuracy": 0}
 		}
 		self.BATCHSIZE, self.EPOCHS = 32, 50
 	
@@ -88,7 +88,7 @@ class ClassificationEngine(object):
 		self.CLASSES = [outcome for outcome in self.testing_generator.class_indices.keys()]
 
 	def configure(self, model):
-		self.pretrained_model = self.models[model](weights="imagenet", include_top=False, input_shape=(299, 299, 3))
+		self.pretrained_model = self.models[model]["classifier"](weights="imagenet", include_top=False, input_shape=(299, 299, 3))
 
 		bottleneck_training_features = self.pretrained_model.predict(self.training_generator, 
 							      									 self.training_generator.samples / self.BATCHSIZE, 
@@ -140,7 +140,10 @@ class ClassificationEngine(object):
 										   verbose=2)
 		self.classifier.load_weights(f"research/models/weights_{model}.hdf5")
 		self.y_predictions = self.classifier.predict(self.X_testing, batch_size=self.BATCHSIZE, verbose=1)
-		print(self.classifier.evaluate(self.X_testing, self.y_testing, verbose=1, batch_size=self.BATCHSIZE)[1])
+		self.models[model]["loss"], self.models[model]["accuracy"] = self.classifier.evaluate(self.X_testing,
+																							  self.y_testing, 
+																							  verbose=1, 
+																							  batch_size=self.BATCHSIZE)
 
 
 if __name__ == "__main__":
@@ -154,3 +157,5 @@ if __name__ == "__main__":
 	for model in ["inception", "vgg16", "resnet50", "efficientnet"]:
 		classifier.configure(model)
 		classifier.run(model)
+	for model in ["inception", "vgg16", "resnet50", "efficientnet"]:
+		print(f">> {model}: {classifier.models[model]['loss']:.4f}, {classifier.models[model]['accuracy']:.4f}")
