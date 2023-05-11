@@ -16,10 +16,10 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, classification_report
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
-from tensorflow.keras.optimizers import Adam, RMSprop
+from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.applications.vgg16 import VGG16
 from tensorflow.keras.applications.resnet50 import ResNet50
 from tensorflow.keras.applications.inception_v3 import InceptionV3
@@ -127,7 +127,8 @@ class ClassificationEngine(object):
 		self.classifier.add(Dropout(0.5))
 		self.classifier.add(Dense(1, activation="sigmoid"))
 		checkpointer = ModelCheckpoint(filepath=f"research/models/weights_{model}.hdf5", verbose=1, save_best_only=True)
-		stopper = EarlyStopping(monitor="val_loss", patience=10, verbose=1, mode="auto")
+		stopper = EarlyStopping(monitor="val_loss", patience=12, verbose=1, mode="auto")
+		lrreducer = ReduceLROnPlateau(monitor="val_loss", factor=0.2, patience=3, min_lr=0.00001)
 		print(self.classifier.summary())
 		self.classifier.compile(loss="binary_crossentropy", optimizer=Adam(lr=0.001), metrics=["binary_accuracy"])
 		self.history = self.classifier.fit(self.X_training, 
@@ -135,7 +136,7 @@ class ClassificationEngine(object):
 										   epochs=50, 
 										   batch_size=self.BATCHSIZE,
 										   validation_data=(self.X_validation, self.y_validation), 
-										   callbacks=[checkpointer, stopper],
+										   callbacks=[checkpointer, stopper, lrreducer],
 										   shuffle=True,
 										   verbose=2)
 		self.classifier.load_weights(f"research/models/weights_{model}.hdf5")
