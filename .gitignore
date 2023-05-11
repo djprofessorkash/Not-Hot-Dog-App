@@ -8,3 +8,9 @@
 # Bottlenecking Features
 *.npz
 /*.npz
+
+# Saved Model States & Subdirectories
+*.hdf5
+*/*.hdf5
+models/
+*/models/
