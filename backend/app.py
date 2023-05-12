@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, request
 from request import proxy_request
-from classifier import classify_image
+from classifier import ImageClassifier
 
 MODE = os.getenv("FLASK_ENV")
 DEV_SERVER_URL = "http://localhost:3000"
@@ -23,7 +23,7 @@ def index(path=""):
 @app.route("/classify", methods-["POST"])
 def classify():
     if request.files["image"]:
-        image_file = request.files["image"]
-        binary_classification = classify_image(image_file=image_file)
-        print(f"Model Classification: {binary_classification}")
-        return binary_classification
+        classifier, image_file = ImageClassifier(), request.files["image"]
+        classifier.classify_image(image_file=image_file)
+        print(f"Model Classification: {str(classifier.binary_classification)}")
+        return classifier.binary_classification
