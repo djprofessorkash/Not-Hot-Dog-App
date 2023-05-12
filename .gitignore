@@ -19,5 +19,4 @@ models/
 */models/
 
 # (TEMPORARY) Inactive Backend Files
-backend/classifier.py
 backend/request.py
