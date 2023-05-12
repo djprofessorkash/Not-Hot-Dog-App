@@ -8,17 +8,40 @@ const Classifier = () => {
     const [result, setResult] = useState("");
 
     useEffect(() => {
-        // TODO: Fetch/get camera feed here.
+        // Fetch/get camera feed here.
+        async function getCameraFeed() {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: true
+            });
+
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+            }
+        };
+
+        getCameraFeed();
     }, []);
 
     useEffect(() => {
         // TODO: Send images to API here.
     }, []);
 
+    // Start video stream when element is loaded and ready.
+    const playCameraFeed = () => {
+        if (videoRef.current) {
+            videoRef.current.play();
+        }
+    };
+
     return (
         <>
-            <h1>Image Classifier</h1>
-            <div></div>
+            <header>
+                <h1>Image Classifier</h1>
+            </header>
+            <main>
+                <video ref={videoRef} onCanPlay={() => playCameraFeed()} id="video" />
+            </main>
         </>
     )
 };
