@@ -9,6 +9,12 @@ The **Not Hot Dog** app is a basic image recognition application that is designe
 
 To track this project's completion via discretized objectives, please navigate to **[OBJECTIVES.md](OBJECTIVES.md)** to access an abstracted breakdown of each major goal towards the demonstrable deliverable.
 
+## Project Configuration
+
+To run this project, ensure that there is a `requirements.txt` file in the upstream project directory that you can pull. This will ensure that you have relevant dependencies and requirements for the project to work successfully.
+
+After pulling a forked copy of the project repo, run the command `npm start:server-dev` to boot up the development server for our Flask-React application. This should open an instance of the app on your local host, likely at port 3000. (Ensure no other processes are running on the same port.)
+
 ## Languages and Dependencies
 
 * **[Python](https://docs.python.org/3/)**
